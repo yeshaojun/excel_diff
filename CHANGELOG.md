@@ -1,27 +1,6 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+Unreleased
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
-
-### Added
-
-- Cell-level comparison with change detection (add/delete/modify)
-- Multi-sheet support across workbooks
-- Multiple output formats (text, JSON, Markdown, CSV)
-- CLI interface with comparison options (ignore case, trim whitespace, ignore empty cells)
-- Web interface with drag-and-drop file upload
-- TypeScript implementation with full type safety
-- Jest test coverage
-- ESLint and Prettier code quality tools
-- Project documentation (README.md, AGENTS.md)
-- Chinese documentation (README.zh-CN.md)
-- Language switcher in README
-- Improved documentation structure
-- Added CHANGELOG.md
-
-### Fixed
-- Fixed Prettier formatting issues in ExcelExporter.ts and server.ts
+- feat(frontend): 增强下载带标记的 Excel 的扩展名推断逻辑，优先使用 Content-Disposition 指定的 filename，次之依据 Content-Type；提供兜底策略，确保 .xls/.xlsx 双扩展名场景的兼容性。
+- docs(test): 增加端到端测试计划文档，便于手动测试用例执行与结果记录。

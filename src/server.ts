@@ -174,26 +174,41 @@ app.post(
       console.log('Target data sheets:', Object.keys(targetData))
 
       console.log('Comparing files...')
-      const changes = comparator.compare(baseData, targetData)
+      
+      // Determine which comparison method to use, default to classic
+      console.log('Using classic comparison logic');
+      const changes = comparator.compare(baseData, targetData);
+      
       console.log('Total changes found:', changes.length)
-
+      
       console.log('Exporting marked Excel...')
 
-      // Check if target file is xls format (old binary format)
-      // xlsx-populate only supports xlsx (Open XML format)
-      const targetFileName = targetFiles[0].originalname.toLowerCase()
-      const isXlsFormat = targetFileName.endsWith('.xls') && !targetFileName.endsWith('.xlsx')
-
+      // Check if target file is xls format and convert to xlsx
+      // This allows xlsx-populate to properly load the template and preserve formatting
+      console.log('Starting export for target file:', targetFiles[0].originalname)
+      console.log('Target file size (original):', targetFiles[0].buffer.byteLength)
+      
+      let targetFileBuffer = targetFiles[0].buffer
+      const isXlsFormat = reader.isXlsFormat(targetFileBuffer)
+      
       if (isXlsFormat) {
-        console.log('Target file is xls format, creating new xlsx workbook without template...')
+        console.log('Target file is xls format, converting to xlsx for template loading...')
+        console.log('  Original buffer size:', targetFiles[0].buffer.byteLength)
+        console.log('  Original file:', targetFiles[0].originalname)
+        targetFileBuffer = reader.convertXlsToXlsx(targetFileBuffer)
+        console.log('  Converted buffer size:', targetFileBuffer.byteLength)
+        console.log('  Is converted buffer xlsx?:', !reader.isXlsFormat(targetFileBuffer))
+      } else {
+        console.log('Target file is already xlsx format, using directly')
       }
+
+
 
       const excelBuffer = await exporter.exportModifiedExcel(
         targetData,
         changes,
-        isXlsFormat ? undefined : targetFiles[0].buffer
+        targetFileBuffer
       )
-
       // Generate a preview ID
       const previewId = Date.now().toString() + Math.random().toString(36).substring(2, 9)
       previewCache.set(previewId, {
@@ -209,12 +224,16 @@ app.post(
         }
       }
 
+      // Output is always xlsx format (xls is converted to xlsx above)
+      const downloadFilename = 'marked_changes.xlsx'
+
       res.setHeader(
         'Content-Type',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       )
-      res.setHeader('Content-Disposition', 'attachment; filename=marked_changes.xlsx')
+      res.setHeader('Content-Disposition', `attachment; filename="${downloadFilename}"`)
       res.setHeader('X-Preview-Id', previewId)
+      res.setHeader('X-Original-Filename', downloadFilename)
       res.send(excelBuffer)
       console.log('Output buffer size:', excelBuffer.byteLength)
       console.log('=== /api/export-marked-excel END ===\n')

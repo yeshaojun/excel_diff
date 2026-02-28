@@ -1,4 +1,12 @@
-import type { CellChange, ChangeRecord, ComparisonOptions, SheetData, WorkbookData } from './types'
+import type {
+  CellChange,
+  ChangeRecord,
+  ComparisonOptions,
+  SheetData,
+  WorkbookData,
+  EnhancedWorkbookData,
+  CellValueType,
+} from './types'
 
 export class ExcelComparator {
   constructor(private options: ComparisonOptions = {}) {}
@@ -17,6 +25,47 @@ export class ExcelComparator {
       const targetSheet = targetData[sheet] || {}
 
       const sheetChanges = this.compareSheets(sheet, baseSheet, targetSheet)
+      changes.push(...sheetChanges)
+    }
+
+    return changes
+  }
+
+  /**
+   * Enhanced comparision that handles enriched format data
+   */
+  compareEnhanced(base: EnhancedWorkbookData, target: EnhancedWorkbookData): CellChange[] {
+    const changes: CellChange[] = []
+
+    // Get all sheet names from both workbooks
+    const allSheets = new Set([...Object.keys(base), ...Object.keys(target)])
+
+    for (const sheetName of allSheets) {
+      const baseSheet = base[sheetName] ? base[sheetName].cells : {}
+      const targetSheet = target[sheetName] ? target[sheetName].cells : {}
+
+      // Extract values from enhanced data for comparison
+      const baseSimpleSheet: SheetData = {}
+      const targetSimpleSheet: SheetData = {}
+
+      // Map enhanced cell format to simple key-value pairs
+      Object.entries(baseSheet).forEach(([cell, valueObj]) => {
+        if (valueObj && typeof valueObj === 'object' && 'value' in valueObj) {
+          baseSimpleSheet[cell] = (valueObj as CellValueType).value
+        } else {
+          baseSimpleSheet[cell] = valueObj
+        }
+      })
+
+      Object.entries(targetSheet).forEach(([cell, valueObj]) => {
+        if (valueObj && typeof valueObj === 'object' && 'value' in valueObj) {
+          targetSimpleSheet[cell] = (valueObj as CellValueType).value
+        } else {
+          targetSimpleSheet[cell] = valueObj
+        }
+      })
+
+      const sheetChanges = this.compareSheets(sheetName, baseSimpleSheet, targetSimpleSheet)
       changes.push(...sheetChanges)
     }
 

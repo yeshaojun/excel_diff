@@ -1,0 +1,3 @@
+Notes trace for end-to-end test run
+- This file is intended to log ad-hoc observations during testing of Excel download extension handling.
+- Use this to capture inconsistent headers or edge cases observed during testing.

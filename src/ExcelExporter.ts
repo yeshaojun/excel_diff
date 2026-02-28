@@ -1,27 +1,42 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any
 const XlsxPopulate: any = require('xlsx-populate')
+import { utils } from 'xlsx'
 import type { CellChange } from './types'
+// Define types locally to avoid compatibility problems
+type CellValueType = {
+  value: unknown
+  formula: string | null
+  style: {
+    fill: { fgColor: any; bgColor?: any } | null
+    font: {
+      name?: string
+      sz?: number
+      color?: any
+      bold?: boolean
+      italic?: boolean
+      underline?: boolean
+    } | null
+    border?: any
+    alignment?: any
+  } | null
+  isMerged: boolean
+  mergedRange?: string
+}
+
+type EnhancedSheetData = {
+  cells: { [cell: string]: CellValueType }
+  mergedCells: [{ s: { r: number; c: number }; e: { r: number; c: number } }]
+  columnWidths: { [col: number]: number }
+  rowHeights: { [row: number]: number }
+}
+
+type EnhancedWorkbookData = {
+  [sheetName: string]: EnhancedSheetData
+}
 
 export class ExcelExporter {
-  /**
-   * Check if buffer is xls format (binary Excel 97-2003 format)
-   * xls files start with specific OLE compound file signature
-   */
-  private isXlsFormat(buffer: Buffer): boolean {
-    // xlsx files are ZIP archives starting with PK
-    // xls files are OLE compound files starting with specific bytes
-    // Check for OLE2 Compound File signature: 0xD0 0xCF 0x11 0xE0
-    return (
-      buffer.length >= 8 &&
-      buffer[0] === 0xd0 &&
-      buffer[1] === 0xcf &&
-      buffer[2] === 0x11 &&
-      buffer[3] === 0xe0
-    )
-  }
-
   async exportModifiedExcel(
-    targetData: Record<string, Record<string, unknown>>,
+    targetData: Record<string, Record<string, unknown>> | EnhancedWorkbookData,
     changes: CellChange[],
     templateBuffer?: Buffer
   ): Promise<Buffer> {
@@ -38,23 +53,18 @@ export class ExcelExporter {
     if (templateBuffer) {
       console.log('Loading template workbook from buffer...')
 
-      // Check if file is xls format (old binary format not supported by xlsx-populate)
-      const isXls = this.isXlsFormat(templateBuffer)
-      console.log('Is xls format:', isXls)
-
-      if (isXls) {
-        console.log('xls format detected - creating new workbook (template not supported)')
+      try {
+        workbook = await XlsxPopulate.fromDataAsync(templateBuffer)
+        console.log('Template workbook loaded successfully')
+        console.log('  Sheets count:', workbook.sheets().length)
+        console.log(
+          '  Sheet names:',
+          workbook.sheets().map((s: any) => s.name())
+        )
+      } catch (error) {
+        console.error('Error loading template workbook:', error)
+        console.log('Falling back to blank workbook')
         workbook = await XlsxPopulate.fromBlankAsync()
-        console.log('New blank workbook created for xls conversion')
-      } else {
-        try {
-          workbook = await XlsxPopulate.fromDataAsync(templateBuffer)
-          console.log('Template workbook loaded successfully')
-        } catch (error) {
-          console.error('Error loading template workbook:', error)
-          console.log('Falling back to blank workbook')
-          workbook = await XlsxPopulate.fromBlankAsync()
-        }
       }
     } else {
       console.log('Creating new blank workbook...')
@@ -62,9 +72,17 @@ export class ExcelExporter {
       console.log('New workbook created successfully')
     }
 
+    // Check for enhanced format type
+    const hasEnhancedFormat =
+      targetData &&
+      typeof (targetData as EnhancedWorkbookData)[Object.keys(targetData)[0]] !== 'undefined' &&
+      typeof ((targetData as EnhancedWorkbookData)[Object.keys(targetData)[0]] as any).cells !==
+        'undefined'
+
     // Collect all sheet names from target data and changes
     const allSheets = new Set([...Object.keys(targetData), ...changes.map(c => c.sheet)])
     console.log('All sheets to process:', Array.from(allSheets))
+
     for (const sheetName of allSheets) {
       console.log(`\n--- Processing sheet: ${sheetName} ---`)
 
@@ -78,34 +96,91 @@ export class ExcelExporter {
         console.log(`Found existing sheet: ${sheetName}`)
       }
 
-      // Get target data for this sheet
-      const targetSheet = targetData[sheetName] || {}
-      console.log(
-        `Target data cells count for sheet "${sheetName}":`,
-        Object.keys(targetSheet).length
-      )
+      // Process different data types
+      if (hasEnhancedFormat) {
+        const enhancedData = targetData as EnhancedWorkbookData
+        const targetSheetEnhanced = enhancedData[sheetName]?.cells || {}
+        const mergedCellRanges = enhancedData[sheetName]?.mergedCells || []
+
+        // Process merged cells first
+        if (mergedCellRanges && mergedCellRanges.length > 0) {
+          console.log(
+            `Sheet "${sheetName}" has ${mergedCellRanges.length} merged ranges, applying...`
+          )
+          for (const mergeRange of mergedCellRanges) {
+            try {
+              const startCell = utils.encode_cell(mergeRange.s)
+              const endCell = utils.encode_cell(mergeRange.e)
+              const rangeStr = `${startCell}:${endCell}`
+
+              // Apply merge using xlsx-populate
+              const range = sheet.range(rangeStr)
+              if (range) {
+                range.merge()
+                console.log(`  Merged range: ${rangeStr}`)
+              }
+            } catch (mergeError) {
+              console.error(`  Error merging range:`, mergeError)
+            }
+          }
+        }
+
+        console.log(
+          `Enhanced target data cells count for sheet "${sheetName}":`,
+          Object.keys(targetSheetEnhanced).length
+        )
+
+        // Update cells with enhanced data
+        for (const [cellAddress, cellObj] of Object.entries(targetSheetEnhanced)) {
+          try {
+            if (!this.isValidCellAddress(cellAddress)) {
+              console.warn(`Invalid cell address: ${cellAddress}, skipping`)
+              continue
+            }
+            const cell = sheet.cell(cellAddress)
+            if (cellObj.value !== null && cellObj.value !== undefined) {
+              cell.value(cellObj.value as string | number | boolean)
+
+              // Apply format from original data if present
+              if (cellObj.style) {
+                this.applyEnhancedFormatToCell(cell, cellObj.style)
+              }
+            }
+          } catch (cellError) {
+            console.error(`Error updating cell ${cellAddress}:`, cellError)
+          }
+        }
+      } else {
+        // Standard processing (backward compatibility)
+        const targetSheet = targetData[sheetName] || {}
+        console.log(
+          `Target data cells count for sheet "${sheetName}":`,
+          Object.keys(targetSheet).length
+        )
+
+        // Update cells with target data (preserving existing formatting from template)
+        for (const [cellAddress, value] of Object.entries(targetSheet)) {
+          try {
+            if (!this.isValidCellAddress(cellAddress)) {
+              console.warn(`Invalid cell address: ${cellAddress}, skipping`)
+              continue
+            }
+            const cell = sheet.cell(cellAddress)
+            if (value !== null && value !== undefined) {
+              cell.value(value as string | number | boolean)
+            }
+          } catch (cellError) {
+            console.error(`Error updating cell ${cellAddress}:`, cellError)
+          }
+        }
+      }
 
       // Get changes for this sheet
       const sheetChanges = changes.filter(c => c.sheet === sheetName)
       console.log(`Changes for sheet "${sheetName}":`, sheetChanges.length)
 
-      // Update cells with target data (preserving existing formatting from template)
-      console.log('Updating cells with target data...')
-      for (const [cellAddress, value] of Object.entries(targetSheet)) {
-        try {
-          if (!this.isValidCellAddress(cellAddress)) {
-            console.warn(`Invalid cell address: ${cellAddress}, skipping`)
-            continue
-          }
-          const cell = sheet.cell(cellAddress)
-          if (value !== null && value !== undefined) {
-            cell.value(value as string | number | boolean)
-          }
-        } catch (cellError) {
-          console.error(`Error updating cell ${cellAddress}:`, cellError)
-        }
-      }
       console.log('Target data updated')
+
       // Apply changes with highlight colors
       if (sheetChanges.length > 0) {
         console.log('Applying change highlights...')
@@ -158,7 +233,6 @@ export class ExcelExporter {
     }
 
     // Generate buffer
-    // Generate buffer
     console.log('\n=== Generating output buffer ===')
     const buffer = await workbook.outputAsync({ type: 'nodebuffer' })
     console.log('Buffer generated successfully, size:', buffer.byteLength)
@@ -174,6 +248,66 @@ export class ExcelExporter {
   private isValidCellAddress(address: string): boolean {
     // Basic cell address validation: column letters followed by row number
     return /^[A-Z]+\d+$/i.test(address)
+  }
+
+  private applyEnhancedFormatToCell(cell: any, style: any): void {
+    if (!style) {
+      // No style to apply
+      return
+    }
+
+    try {
+      // Apply fill style from source data if available
+      if (style.fill && style.fill.fgColor) {
+        const fgColor =
+          style.fill.fgColor.rgb || style.fill.fgColor.theme || style.fill.fgColor.indexed
+        if (fgColor) {
+          cell.style('fill', {
+            type: 'solid',
+            color: { rgb: fgColor.toString().padStart(6, '0') || 'FFFFFF' }, // default to white
+          })
+        }
+      }
+
+      // Apply font styles if available
+      if (style.font) {
+        if (style.font.bold !== undefined) {
+          cell.style('fontBold', style.font.bold)
+        }
+        if (style.font.italic !== undefined) {
+          cell.style('fontItalic', style.font.italic)
+        }
+        if (style.font.name) {
+          cell.style('fontName', style.font.name)
+        }
+        if (style.font.sz) {
+          cell.style('fontSize', style.font.sz)
+        }
+        if (style.font.color) {
+          const fontColor =
+            style.font.color.rgb || style.font.color.theme || style.font.color.indexed
+          if (fontColor) {
+            cell.style('fontColor', fontColor.toString().padStart(6, '0'))
+          }
+        }
+      }
+
+      // Apply alignment if available
+      if (style.alignment) {
+        if (style.alignment.horizontal) {
+          cell.style('horizontalAlignment', style.alignment.horizontal)
+        }
+        if (style.alignment.vertical) {
+          cell.style('verticalAlignment', style.alignment.vertical)
+        }
+      }
+    } catch (styleError) {
+      // Skip formatting if error occurred
+      console.warn('Warning - could not apply enhanced formatting to cell:', {
+        error: (styleError as Error).message,
+        cell,
+      })
+    }
   }
 
   /**
@@ -208,7 +342,7 @@ export class ExcelExporter {
           // Pink highlight for deleted cells
           cell.style({
             fill: 'FFC0CB',
-            strike: true,
+            strikethrough: true,
             fontColor: '8B4513',
           })
           console.log('    Applied: deleted style (pink)')
@@ -218,8 +352,8 @@ export class ExcelExporter {
           console.log('    No style applied (default)')
           break
       }
-    } catch (error) {
-      console.error(`    Error applying style to cell:`, error)
+    } catch (error: any) {
+      console.error('    Error applying style to cell:', { error: error.message, changeType })
       // Continue without applying style - don't break the export
     }
   }

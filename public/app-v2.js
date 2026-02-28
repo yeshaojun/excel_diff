@@ -335,7 +335,30 @@
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = '标记改动的Excel文件.xlsx'
+      // 动态确定下载文件扩展名：优先解析 Content-Disposition，次之根据 Content-Type
+      let ext = '.xlsx'
+      const ct = response.headers.get('content-type') || ''
+      if (ct.includes('application/vnd.ms-excel')) {
+        ext = '.xls'
+      }
+      // Support both canonical and lowercase header names
+      const disposition =
+        response.headers.get('Content-Disposition') ||
+        response.headers.get('content-disposition') ||
+        ''
+      let filenameFromDisposition = null
+      const m1 = /filename\*=UTF-8''([^;]+);?/i.exec(disposition)
+      const m2 = /filename=\"?([^\";]+)\"?/i.exec(disposition)
+      if (m1 && m1[1]) {
+        filenameFromDisposition = decodeURIComponent(m1[1])
+      } else if (m2 && m2[1]) {
+        filenameFromDisposition = m2[1]
+      }
+      if (filenameFromDisposition) {
+        const mExt = /\.[a-zA-Z0-9]+$/.exec(filenameFromDisposition)
+        if (mExt) ext = mExt[0]
+      }
+      a.download = `标记改动的Excel文件${ext}`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
