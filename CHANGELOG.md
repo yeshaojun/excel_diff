@@ -18,3 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Jest test coverage
 - ESLint and Prettier code quality tools
 - Project documentation (README.md, AGENTS.md)
+- Chinese documentation (README.zh-CN.md)
+- Language switcher in README
+- Improved documentation structure
+- Added CHANGELOG.md
+
+### Fixed
+- Fixed Prettier formatting issues in ExcelExporter.ts and server.ts

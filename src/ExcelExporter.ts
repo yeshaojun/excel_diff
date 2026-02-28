@@ -51,7 +51,10 @@ export class ExcelExporter {
 
       // Get target data for this sheet
       const targetSheet = targetData[sheetName] || {}
-      console.log(`Target data cells count for sheet "${sheetName}":`, Object.keys(targetSheet).length)
+      console.log(
+        `Target data cells count for sheet "${sheetName}":`,
+        Object.keys(targetSheet).length
+      )
 
       // Get changes for this sheet
       const sheetChanges = changes.filter(c => c.sheet === sheetName)
@@ -91,7 +94,7 @@ export class ExcelExporter {
         const hasModified = sheetChanges.some(c => c.changeType === 'modified')
         const hasAdded = sheetChanges.some(c => c.changeType === 'added')
         const hasDeleted = sheetChanges.some(c => c.changeType === 'deleted')
-        
+
         if (hasModified) {
           sheet.tabColor('FF6B6B') // Red for modified
           console.log('Tab color set: red (modified)')

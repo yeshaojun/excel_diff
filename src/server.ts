@@ -179,7 +179,11 @@ app.post(
 
       console.log('Exporting marked Excel...')
       // Use target file as template to preserve formatting (including new rows)
-      const excelBuffer = await exporter.exportModifiedExcel(targetData, changes, targetFiles[0].buffer)
+      const excelBuffer = await exporter.exportModifiedExcel(
+        targetData,
+        changes,
+        targetFiles[0].buffer
+      )
 
       // Generate a preview ID
       const previewId = Date.now().toString() + Math.random().toString(36).substring(2, 9)
