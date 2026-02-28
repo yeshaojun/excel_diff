@@ -43,6 +43,18 @@ Features:
 - Download results in multiple formats
 - Copy results to clipboard
 
+**Interface Screenshots:**
+
+### Upload and Configuration Interface
+
+![Upload and Configuration Interface](./result1.png)
+
+### Comparison Results Display
+
+![Comparison Results Display](./result2.png)
+
+### Command Line
+
 ### Command Line
 
 ```bash
