@@ -3,8 +3,8 @@
  * 处理文件上传、对比和结果显示
  */
 
-(function () {
-  'use strict';
+;(function () {
+  'use strict'
 
   // 状态管理
   const state = {
@@ -15,7 +15,7 @@
     currentFormat: 'text',
     activeTab: 'all',
     baseData: null,
-  };
+  }
 
   // DOM 元素
   const elements = {
@@ -57,119 +57,119 @@
     successToast: document.getElementById('successToast'),
     successMessage: document.getElementById('successMessage'),
     closeSuccess: document.getElementById('closeSuccess'),
-  };
+  }
 
   // 工具函数
   function formatFileSize(bytes) {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    if (bytes === 0) return '0 B'
+    const k = 1024
+    const sizes = ['B', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
   }
 
   function getFileExtension(filename) {
-    return filename.slice(((filename.lastIndexOf('.') - 1) >>> 0) + 2).toLowerCase();
+    return filename.slice(((filename.lastIndexOf('.') - 1) >>> 0) + 2).toLowerCase()
   }
 
   function showError(message) {
-    console.error('错误:', message);
-    elements.errorMessage.textContent = '❌ ' + message;
-    elements.errorToast.hidden = false;
-    elements.errorToast.classList.add('visible');
-    setTimeout(() => hideToast('error'), 5000);
+    console.error('错误:', message)
+    elements.errorMessage.textContent = '❌ ' + message
+    elements.errorToast.hidden = false
+    elements.errorToast.classList.add('visible')
+    setTimeout(() => hideToast('error'), 5000)
   }
 
   function showSuccess(message) {
-    console.log('成功:', message);
-    elements.successMessage.textContent = '✅ ' + message;
-    elements.successToast.hidden = false;
-    elements.successToast.classList.add('visible');
-    setTimeout(() => hideToast('success'), 3000);
+    console.log('成功:', message)
+    elements.successMessage.textContent = '✅ ' + message
+    elements.successToast.hidden = false
+    elements.successToast.classList.add('visible')
+    setTimeout(() => hideToast('success'), 3000)
   }
 
   function hideToast(type) {
-    const toast = type === 'error' ? elements.errorToast : elements.successToast;
-    toast.classList.remove('visible');
+    const toast = type === 'error' ? elements.errorToast : elements.successToast
+    toast.classList.remove('visible')
     setTimeout(() => {
-      toast.hidden = true;
-    }, 300);
+      toast.hidden = true
+    }, 300)
   }
 
   function showLoading() {
-    console.log('显示加载状态...');
-    elements.loadingOverlay.hidden = false;
+    console.log('显示加载状态...')
+    elements.loadingOverlay.hidden = false
   }
 
   function hideLoading() {
-    console.log('隐藏加载状态');
-    elements.loadingOverlay.hidden = true;
+    console.log('隐藏加载状态')
+    elements.loadingOverlay.hidden = true
   }
 
   function updateCompareButton() {
-    elements.compareBtn.disabled = !(state.baseFile && state.targetFiles.length > 0);
-    console.log('更新对比按钮状态:', elements.compareBtn.disabled);
+    elements.compareBtn.disabled = !(state.baseFile && state.targetFiles.length > 0)
+    console.log('更新对比按钮状态:', elements.compareBtn.disabled)
   }
 
   // 文件处理
   function handleBaseFile(file) {
-    console.log('处理基准文件:', file.name);
-    const ext = getFileExtension(file.name);
+    console.log('处理基准文件:', file.name)
+    const ext = getFileExtension(file.name)
     if (!['xlsx', 'xls'].includes(ext)) {
-      showError('请上传 Excel 文件（.xlsx 或 .xls）');
-      return;
+      showError('请上传 Excel 文件（.xlsx 或 .xls）')
+      return
     }
 
-    state.baseFile = file;
-    elements.baseFileName.textContent = `${file.name} (${formatFileSize(file.size)})`;
-    elements.basePreview.classList.add('visible');
-    elements.baseDropzone.querySelector('.dropzone-content').style.display = 'none';
-    updateCompareButton();
+    state.baseFile = file
+    elements.baseFileName.textContent = `${file.name} (${formatFileSize(file.size)})`
+    elements.basePreview.classList.add('visible')
+    elements.baseDropzone.querySelector('.dropzone-content').style.display = 'none'
+    updateCompareButton()
   }
 
   function removeBaseFile() {
-    console.log('移除基准文件');
-    state.baseFile = null;
-    elements.baseFileInput.value = '';
-    elements.basePreview.classList.remove('visible');
-    elements.baseDropzone.querySelector('.dropzone-content').style.display = '';
-    updateCompareButton();
+    console.log('移除基准文件')
+    state.baseFile = null
+    elements.baseFileInput.value = ''
+    elements.basePreview.classList.remove('visible')
+    elements.baseDropzone.querySelector('.dropzone-content').style.display = ''
+    updateCompareButton()
   }
 
   function addTargetFile(file) {
-    console.log('添加对比文件:', file.name);
-    const ext = getFileExtension(file.name);
+    console.log('添加对比文件:', file.name)
+    const ext = getFileExtension(file.name)
     if (!['xlsx', 'xls'].includes(ext)) {
-      showError('请上传 Excel 文件（.xlsx 或 .xls）');
-      return;
+      showError('请上传 Excel 文件（.xlsx 或 .xls）')
+      return
     }
 
-    if (state.targetFiles.some((f) => f.name === file.name)) {
-      showError(`文件 "${file.name}" 已经添加`);
-      return;
+    if (state.targetFiles.some(f => f.name === file.name)) {
+      showError(`文件 "${file.name}" 已经添加`)
+      return
     }
 
-    state.targetFiles.push(file);
-    renderTargetFiles();
-    updateCompareButton();
+    state.targetFiles.push(file)
+    renderTargetFiles()
+    updateCompareButton()
   }
 
   function removeTargetFile(index) {
-    console.log('移除对比文件:', index);
-    state.targetFiles.splice(index, 1);
-    renderTargetFiles();
-    updateCompareButton();
+    console.log('移除对比文件:', index)
+    state.targetFiles.splice(index, 1)
+    renderTargetFiles()
+    updateCompareButton()
   }
 
   function renderTargetFiles() {
     if (state.targetFiles.length === 0) {
-      elements.targetFileList.classList.remove('visible');
-      elements.targetDropzone.querySelector('.dropzone-content').style.display = '';
-      return;
+      elements.targetFileList.classList.remove('visible')
+      elements.targetDropzone.querySelector('.dropzone-content').style.display = ''
+      return
     }
 
-    elements.targetFileList.classList.add('visible');
-    elements.targetDropzone.querySelector('.dropzone-content').style.display = 'none';
+    elements.targetFileList.classList.add('visible')
+    elements.targetDropzone.querySelector('.dropzone-content').style.display = 'none'
 
     elements.targetFileList.innerHTML = state.targetFiles
       .map(
@@ -189,229 +189,241 @@
       </div>
     `
       )
-      .join('');
+      .join('')
 
-    elements.targetFileList.querySelectorAll('.remove-btn').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const index = parseInt(btn.dataset.index, 10);
-        removeTargetFile(index);
-      });
-    });
+    elements.targetFileList.querySelectorAll('.remove-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation()
+        const index = parseInt(btn.dataset.index, 10)
+        removeTargetFile(index)
+      })
+    })
   }
 
   // 拖放
   function setupDropzone(dropzone, input, onFile, multiple = false) {
-    console.log('设置拖放区:', dropzone.id);
-    dropzone.addEventListener('click', () => input.click());
+    console.log('设置拖放区:', dropzone.id)
+    dropzone.addEventListener('click', () => input.click())
 
-    input.addEventListener('change', (e) => {
-      console.log('文件选择变化:', e.target.files.length);
-      const files = Array.from(e.target.files);
+    input.addEventListener('change', e => {
+      console.log('文件选择变化:', e.target.files.length)
+      const files = Array.from(e.target.files)
       if (multiple) {
-        files.forEach(onFile);
+        files.forEach(onFile)
       } else if (files[0]) {
-        onFile(files[0]);
+        onFile(files[0])
       }
-    });
-
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
-      dropzone.addEventListener(eventName, (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      });
-    });
-
-    ['dragenter', 'dragover'].forEach((eventName) => {
+    })
+    ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      dropzone.addEventListener(eventName, e => {
+        e.preventDefault()
+        e.stopPropagation()
+      })
+    })
+    ;['dragenter', 'dragover'].forEach(eventName => {
       dropzone.addEventListener(eventName, () => {
-        dropzone.classList.add('dragover');
-      });
-    });
-
-    ['dragleave', 'drop'].forEach((eventName) => {
+        dropzone.classList.add('dragover')
+      })
+    })
+    ;['dragleave', 'drop'].forEach(eventName => {
       dropzone.addEventListener(eventName, () => {
-        dropzone.classList.remove('dragover');
-      });
-    });
+        dropzone.classList.remove('dragover')
+      })
+    })
 
-    dropzone.addEventListener('drop', (e) => {
-      console.log('文件拖放');
-      const files = Array.from(e.dataTransfer.files);
+    dropzone.addEventListener('drop', e => {
+      console.log('文件拖放')
+      const files = Array.from(e.dataTransfer.files)
       if (multiple) {
-        files.forEach(onFile);
+        files.forEach(onFile)
       } else if (files[0]) {
-        onFile(files[0]);
+        onFile(files[0])
       }
-    });
+    })
   }
 
   // 对比文件
   async function compareFiles() {
     if (!state.baseFile || state.targetFiles.length === 0) {
-      console.warn('缺少文件，无法对比');
-      return;
+      console.warn('缺少文件，无法对比')
+      return
     }
 
-    showLoading();
+    showLoading()
 
-    const formData = new FormData();
-    formData.append('base', state.baseFile);
-    state.targetFiles.forEach((file) => {
-      formData.append('targets', file);
-    });
+    const formData = new FormData()
+    formData.append('base', state.baseFile)
+    state.targetFiles.forEach(file => {
+      formData.append('targets', file)
+    })
 
     const options = {
       ignoreCase: elements.ignoreCase.checked,
       trimWhitespace: elements.trimWhitespace.checked,
       ignoreEmptyCells: elements.ignoreEmpty.checked,
       format: state.currentFormat,
-    };
-    formData.append('options', JSON.stringify(options));
+    }
+    formData.append('options', JSON.stringify(options))
 
     try {
-      console.log('发送对比请求...');
+      console.log('发送对比请求...')
       const response = await fetch('/api/compare', {
         method: 'POST',
         body: formData,
-      });
+      })
 
-      console.log('收到响应:', response.status, response.ok);
+      console.log('收到响应:', response.status, response.ok)
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || '对比失败');
+        const error = await response.json()
+        throw new Error(error.error || '对比失败')
       }
 
-      const result = await response.json();
-      console.log('对比结果:', result);
-      state.currentResults = result;
-      state.currentOutput = result.output;
+      const result = await response.json()
+      console.log('对比结果:', result)
+      state.currentResults = result
+      state.currentOutput = result.output
 
-      displayResults(result);
-      showSuccess(`对比完成！发现 ${result.totalChanges} 处变更。`);
+      displayResults(result)
+      showSuccess(`对比完成！发现 ${result.totalChanges} 处变更。`)
     } catch (error) {
-      console.error('对比错误:', error);
-      showError(error.message || '对比过程中发生错误');
+      console.error('对比错误:', error)
+      showError(error.message || '对比过程中发生错误')
     } finally {
-      hideLoading();
+      hideLoading()
     }
   }
 
   // 下载带标记的Excel
   async function downloadMarkedExcel() {
     if (!state.baseFile || state.targetFiles.length === 0) {
-      showError('请先完成对比再下载');
-      return;
+      showError('请先完成对比再下载')
+      return
     }
 
-    showLoading();
+    showLoading()
 
-    const formData = new FormData();
-    formData.append('base', state.baseFile);
-    formData.append('targets', state.targetFiles[0]);
+    const formData = new FormData()
+    formData.append('base', state.baseFile)
+    formData.append('targets', state.targetFiles[0])
 
     try {
-      console.log('下载带标记的Excel...');
+      console.log('下载带标记的Excel...')
       const response = await fetch('/api/export-marked-excel', {
         method: 'POST',
         body: formData,
-      });
+      })
 
-      console.log('响应状态:', response.status);
+      console.log('响应状态:', response.status)
 
       if (!response.ok) {
-        throw new Error('导出失败');
+        const contentType = response.headers.get('content-type')
+        let errorMessage = '导出失败'
+
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json().catch(() => ({ error: '导出失败' }))
+          errorMessage = errorData.error || '导出失败'
+        } else {
+          const errorText = await response.text().catch(() => '导出失败')
+          errorMessage = errorText || '导出失败'
+        }
+
+        throw new Error(`导出失败 (HTTP ${response.status}): ${errorMessage}`)
       }
 
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = '标记改动的Excel文件.xlsx';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = '标记改动的Excel文件.xlsx'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
 
-      showSuccess('带标记的Excel文件已下载');
+      showSuccess('带标记的Excel文件已下载')
     } catch (error) {
-      console.error('下载错误:', error);
-      showError('下载失败: ' + error.message);
+      console.error('下载错误:', error)
+      showError('下载失败: ' + error.message)
     } finally {
-      hideLoading();
+      hideLoading()
     }
   }
   // Show preview modal
   async function showPreview() {
-    const previewModal = document.getElementById('previewModal');
-    const previewContent = document.getElementById('previewContent');
-    const excelPreviewContainer = document.getElementById('excelPreviewContainer');
+    const previewModal = document.getElementById('previewModal')
+    const previewContent = document.getElementById('previewContent')
+    const excelPreviewContainer = document.getElementById('excelPreviewContainer')
 
     if (!state.baseFile || state.targetFiles.length === 0) {
       if (previewModal) {
-        previewModal.style.display = 'flex';
+        previewModal.style.display = 'flex'
       }
       if (previewContent) {
-        previewContent.style.display = 'block';
-        previewContent.innerHTML = '<p class="preview-hint">请先上传文件并完成对比</p>';
+        previewContent.style.display = 'block'
+        previewContent.innerHTML = '<p class="preview-hint">请先上传文件并完成对比</p>'
       }
-      return;
+      return
     }
 
     if (previewModal && previewContent && excelPreviewContainer) {
-      previewModal.style.display = 'flex';
-      previewContent.style.display = 'block';
-      previewContent.innerHTML = '<p class="preview-loading">正在生成预览...</p>';
-      excelPreviewContainer.innerHTML = '';
+      previewModal.style.display = 'flex'
+      previewContent.style.display = 'block'
+      previewContent.innerHTML = '<p class="preview-loading">正在生成预览...</p>'
+      excelPreviewContainer.innerHTML = ''
 
       try {
-        const formData = new FormData();
-        formData.append('base', state.baseFile);
-        formData.append('targets', state.targetFiles[0]);
+        const formData = new FormData()
+        formData.append('base', state.baseFile)
+        formData.append('targets', state.targetFiles[0])
 
         const response = await fetch('/api/export-marked-excel', {
           method: 'POST',
           body: formData,
-        });
+        })
 
         if (!response.ok) {
-          throw new Error('生成预览失败');
+          throw new Error('生成预览失败')
         }
 
-        const blob = await response.blob();
-        console.log('Excel file loaded for preview, size:', blob.size);
+        const blob = await response.blob()
+        console.log('Excel file loaded for preview, size:', blob.size)
 
-        const arrayBuffer = await blob.arrayBuffer();
+        const arrayBuffer = await blob.arrayBuffer()
 
         const myExcelPreviewer = jsPreviewExcel.init(excelPreviewContainer, {
           showLogo: false,
-          lang: 'zh-CN'
-        });
+          lang: 'zh-CN',
+        })
 
-        myExcelPreviewer.preview(arrayBuffer).then(function(res) {
-          console.log('预览完成:', res);
-          previewContent.style.display = 'none';
-        }).catch(function(e) {
-          console.error('预览失败:', e);
-          previewContent.style.display = 'block';
-          previewContent.innerHTML = '<p class="preview-error">预览失败: ' + e.message + '</p>';
-        });
+        myExcelPreviewer
+          .preview(arrayBuffer)
+          .then(function (res) {
+            console.log('预览完成:', res)
+            previewContent.style.display = 'none'
+          })
+          .catch(function (e) {
+            console.error('预览失败:', e)
+            previewContent.style.display = 'block'
+            previewContent.innerHTML = '<p class="preview-error">预览失败: ' + e.message + '</p>'
+          })
       } catch (error) {
-        console.error('预览错误:', error);
-        previewContent.style.display = 'block';
-        previewContent.innerHTML = '<p class="preview-error">生成预览失败: ' + error.message + '</p>';
+        console.error('预览错误:', error)
+        previewContent.style.display = 'block'
+        previewContent.innerHTML =
+          '<p class="preview-error">生成预览失败: ' + error.message + '</p>'
       }
     }
   }
 
   // 显示结果
   function displayResults(result) {
-    console.log('显示结果');
-    elements.resultsSection.hidden = false;
+    console.log('显示结果')
+    elements.resultsSection.hidden = false
 
     // 渲染统计卡片
-    const { added, modified, deleted } = result.changeCounts;
-    const total = added + modified + deleted;
+    const { added, modified, deleted } = result.changeCounts
+    const total = added + modified + deleted
 
     elements.summaryCards.innerHTML = `
       <div class="summary-card total">
@@ -430,200 +442,201 @@
         <div class="count">${deleted}</div>
         <div class="label">删除</div>
       </div>
-    `;
+    `
 
-    displayOutput();
-    elements.resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    displayOutput()
+    elements.resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   function displayOutput() {
-    if (!state.currentResults) return;
+    if (!state.currentResults) return
 
-    let output = '';
+    let output = ''
 
     if (state.currentFormat === 'json') {
-      output = JSON.stringify(state.currentResults.raw, null, 2);
+      output = JSON.stringify(state.currentResults.raw, null, 2)
     } else {
-      output = state.currentOutput;
+      output = state.currentOutput
     }
 
-    elements.resultsOutput.textContent = output;
+    elements.resultsOutput.textContent = output
   }
 
   function filterByType(type) {
-    if (!state.currentResults || !state.currentResults.raw) return;
+    if (!state.currentResults || !state.currentResults.raw) return
 
     if (type === 'all') {
-      displayOutput();
-      return;
+      displayOutput()
+      return
     }
 
-    const filtered = state.currentResults.raw.records.map((record) => ({
+    const filtered = state.currentResults.raw.records.map(record => ({
       ...record,
-      changes: record.changes.filter((c) => c.changeType === type),
-    }));
+      changes: record.changes.filter(c => c.changeType === type),
+    }))
 
     if (state.currentFormat === 'json') {
-      elements.resultsOutput.textContent = JSON.stringify(filtered, null, 2);
+      elements.resultsOutput.textContent = JSON.stringify(filtered, null, 2)
     } else {
-      const output = generateFilteredOutput(filtered, type);
-      elements.resultsOutput.textContent = output;
+      const output = generateFilteredOutput(filtered, type)
+      elements.resultsOutput.textContent = output
     }
   }
 
   function generateFilteredOutput(records, type) {
-    const lines = [];
-    const icons = { added: '+', modified: '~', deleted: '-' };
-    const icon = icons[type] || '•';
+    const lines = []
+    const icons = { added: '+', modified: '~', deleted: '-' }
+    const icon = icons[type] || '•'
 
     for (const record of records) {
-      if (record.changes.length === 0) continue;
+      if (record.changes.length === 0) continue
 
-      lines.push(`\n${'='.repeat(60)}`);
-      lines.push(`文件: ${record.fileName}`);
-      lines.push(`${record.changes.length} 处${type}变更`);
-      lines.push('='.repeat(60));
+      lines.push(`\n${'='.repeat(60)}`)
+      lines.push(`文件: ${record.fileName}`)
+      lines.push(`${record.changes.length} 处${type}变更`)
+      lines.push('='.repeat(60))
 
       for (const change of record.changes) {
-        lines.push(`\n  ${icon} 工作表: ${change.sheet} | 单元格: ${change.cell}`);
+        lines.push(`\n  ${icon} 工作表: ${change.sheet} | 单元格: ${change.cell}`)
         if (type !== 'added') {
-          lines.push(`    修改前: ${formatValue(change.oldValue)}`);
+          lines.push(`    修改前: ${formatValue(change.oldValue)}`)
         }
         if (type !== 'deleted') {
-          lines.push(`    修改后: ${formatValue(change.newValue)}`);
+          lines.push(`    修改后: ${formatValue(change.newValue)}`)
         }
       }
     }
 
-    return lines.join('\n') || `未发现${type}变更。`;
+    return lines.join('\n') || `未发现${type}变更。`
   }
 
   function formatValue(value) {
-    if (value === undefined || value === null) return '(空)';
-    return String(value);
+    if (value === undefined || value === null) return '(空)'
+    return String(value)
   }
 
   // Close preview modal
   function closePreview() {
-    const previewModal = document.getElementById('previewModal');
-    const previewContent = document.getElementById('previewContent');
-    const excelPreviewContainer = document.getElementById('excelPreviewContainer');
+    const previewModal = document.getElementById('previewModal')
+    const previewContent = document.getElementById('previewContent')
+    const excelPreviewContainer = document.getElementById('excelPreviewContainer')
 
     if (previewModal) {
-      previewModal.style.display = 'none';
+      previewModal.style.display = 'none'
     }
 
     if (previewContent) {
-      previewContent.style.display = 'block';
-      previewContent.innerHTML = '<p class="preview-hint">点击"在线预览"按钮查看带标记的Excel文件</p>';
+      previewContent.style.display = 'block'
+      previewContent.innerHTML =
+        '<p class="preview-hint">点击"在线预览"按钮查看带标记的Excel文件</p>'
     }
 
     if (excelPreviewContainer) {
-      excelPreviewContainer.innerHTML = '';
+      excelPreviewContainer.innerHTML = ''
     }
   }
 
   // 下载和复制
   function downloadResults() {
     if (!state.currentOutput) {
-      showError('没有可下载的结果');
-      return;
+      showError('没有可下载的结果')
+      return
     }
 
-    const formats = { text: 'txt', json: 'json', markdown: 'md', csv: 'csv' };
-    const ext = formats[state.currentFormat] || 'txt';
-    const mimeType = state.currentFormat === 'json' ? 'application/json' : 'text/plain';
+    const formats = { text: 'txt', json: 'json', markdown: 'md', csv: 'csv' }
+    const ext = formats[state.currentFormat] || 'txt'
+    const mimeType = state.currentFormat === 'json' ? 'application/json' : 'text/plain'
 
-    const blob = new Blob([state.currentOutput], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `对比结果.${ext}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const blob = new Blob([state.currentOutput], { type: mimeType })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `对比结果.${ext}`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
 
-    showSuccess('结果已下载！');
+    showSuccess('结果已下载！')
   }
 
   async function copyResults() {
     if (!state.currentOutput) {
-      showError('没有可复制的内容');
-      return;
+      showError('没有可复制的内容')
+      return
     }
 
     try {
-      await navigator.clipboard.writeText(state.currentOutput);
-      showSuccess('结果已复制到剪贴板！');
+      await navigator.clipboard.writeText(state.currentOutput)
+      showSuccess('结果已复制到剪贴板！')
     } catch {
-      showError('复制到剪贴板失败');
+      showError('复制到剪贴板失败')
     }
   }
 
   // 事件监听
   function setupEventListeners() {
-    console.log('设置事件监听器');
-    setupDropzone(elements.baseDropzone, elements.baseFileInput, handleBaseFile, false);
-    setupDropzone(elements.targetDropzone, elements.targetFileInput, addTargetFile, true);
+    console.log('设置事件监听器')
+    setupDropzone(elements.baseDropzone, elements.baseFileInput, handleBaseFile, false)
+    setupDropzone(elements.targetDropzone, elements.targetFileInput, addTargetFile, true)
 
-    elements.removeBase.addEventListener('click', (e) => {
-      e.stopPropagation();
-      removeBaseFile();
-    });
+    elements.removeBase.addEventListener('click', e => {
+      e.stopPropagation()
+      removeBaseFile()
+    })
 
-    elements.formatRadios.forEach((radio) => {
-      radio.addEventListener('change', (e) => {
-        state.currentFormat = e.target.value;
+    elements.formatRadios.forEach(radio => {
+      radio.addEventListener('change', e => {
+        state.currentFormat = e.target.value
         if (state.currentResults) {
-          compareFiles();
+          compareFiles()
         }
-      });
-    });
+      })
+    })
 
-    elements.compareBtn.addEventListener('click', compareFiles);
-    elements.downloadBtn.addEventListener('click', downloadResults);
-    elements.downloadMarkedBtn.addEventListener('click', downloadMarkedExcel);
-    elements.copyBtn.addEventListener('click', copyResults);
+    elements.compareBtn.addEventListener('click', compareFiles)
+    elements.downloadBtn.addEventListener('click', downloadResults)
+    elements.downloadMarkedBtn.addEventListener('click', downloadMarkedExcel)
+    elements.copyBtn.addEventListener('click', copyResults)
 
     if (elements.previewBtn) {
-      elements.previewBtn.addEventListener('click', () => showPreview());
+      elements.previewBtn.addEventListener('click', () => showPreview())
     }
-    document.getElementById('closePreview')?.addEventListener('click', closePreview);
+    document.getElementById('closePreview')?.addEventListener('click', closePreview)
 
-    elements.tabButtons.forEach((btn) => {
+    elements.tabButtons.forEach(btn => {
       btn.addEventListener('click', () => {
-        elements.tabButtons.forEach((b) => b.classList.remove('active'));
-        btn.classList.add('active');
-        state.activeTab = btn.dataset.tab;
-        filterByType(state.activeTab);
-      });
-    });
+        elements.tabButtons.forEach(b => b.classList.remove('active'))
+        btn.classList.add('active')
+        state.activeTab = btn.dataset.tab
+        filterByType(state.activeTab)
+      })
+    })
 
-    elements.closeError.addEventListener('click', () => hideToast('error'));
-    elements.closeSuccess.addEventListener('click', () => hideToast('success'));
+    elements.closeError.addEventListener('click', () => hideToast('error'))
+    elements.closeSuccess.addEventListener('click', () => hideToast('success'))
 
-    document.addEventListener('keydown', (e) => {
+    document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
-        hideToast('error');
-        hideToast('success');
+        hideToast('error')
+        hideToast('success')
       }
       if (e.key === 'Enter' && document.activeElement === elements.compareBtn) {
-        compareFiles();
+        compareFiles()
       }
-    });
+    })
   }
 
   // 初始化
   function init() {
-    console.log('初始化 Excel 对比工具');
-    setupEventListeners();
+    console.log('初始化 Excel 对比工具')
+    setupEventListeners()
   }
 
   // DOM 加载完成后运行
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', init)
   } else {
-    init();
+    init()
   }
-})();
+})()

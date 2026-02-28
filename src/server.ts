@@ -178,11 +178,20 @@ app.post(
       console.log('Total changes found:', changes.length)
 
       console.log('Exporting marked Excel...')
-      // Use target file as template to preserve formatting (including new rows)
+
+      // Check if target file is xls format (old binary format)
+      // xlsx-populate only supports xlsx (Open XML format)
+      const targetFileName = targetFiles[0].originalname.toLowerCase()
+      const isXlsFormat = targetFileName.endsWith('.xls') && !targetFileName.endsWith('.xlsx')
+
+      if (isXlsFormat) {
+        console.log('Target file is xls format, creating new xlsx workbook without template...')
+      }
+
       const excelBuffer = await exporter.exportModifiedExcel(
         targetData,
         changes,
-        targetFiles[0].buffer
+        isXlsFormat ? undefined : targetFiles[0].buffer
       )
 
       // Generate a preview ID
@@ -211,7 +220,13 @@ app.post(
       console.log('=== /api/export-marked-excel END ===\n')
     } catch (error) {
       console.error('Export error:', error)
-      const message = error instanceof Error ? error.message : messages.errors.exportFailed
+      let message = messages.errors.exportFailed
+      if (error instanceof Error) {
+        message = error.message
+        if (error.stack) {
+          console.error('Stack trace:', error.stack)
+        }
+      }
       res.status(500).json({ error: message })
     }
   }
