@@ -1,0 +1,247 @@
+# Excel File Diff Tool
+
+A powerful Excel file comparison tool that detects changes between multiple Excel files and generates detailed change records.
+
+## Features
+
+- ✅ **Cell-level comparison**: Detects additions, deletions, and modifications
+- 📊 **Multi-sheet support**: Compares across all sheets in workbooks
+- 🎯 **Flexible comparison modes**:
+  - Ignore case sensitivity
+  - Trim whitespace
+  - Ignore empty cells
+- 📝 **Multiple output formats**: Text, JSON, Markdown, CSV
+- 🚀 **CLI interface**: Easy command-line usage
+- 🌐 **Web interface**: Modern, user-friendly web UI
+
+## Installation
+
+```bash
+npm install
+npm run build
+```
+
+## Usage
+
+### Web Interface
+
+Start the web server:
+
+```bash
+npm run web
+```
+
+Then open http://localhost:3000 in your browser.
+
+Features:
+- Drag and drop file uploads
+- Multiple target file comparison
+- Real-time comparison options
+- Download results in multiple formats
+- Copy results to clipboard
+
+### Command Line
+
+```bash
+# Compare files with text output
+npx ts-node src/cli.ts base.xlsx target1.xlsx target2.xlsx
+
+# Output to file with specific format
+npx ts-node src/cli.ts base.xlsx target.xlsx -o changes_{name}.md -f markdown
+
+# Ignore case and empty cells
+npx ts-node src/cli.ts base.xlsx target.xlsx --ignore-case --ignore-empty
+
+# Export as CSV
+npx ts-node src/cli.ts base.xlsx target.xlsx -o changes_{name}.csv -f csv
+```
+
+### Programmatic Usage
+
+```typescript
+import { ExcelReader, ExcelComparator, ChangeRecordGenerator } from './src'
+
+const reader = new ExcelReader()
+const comparator = new ExcelComparator({ ignoreEmptyCells: true })
+const generator = new ChangeRecordGenerator()
+
+// Read Excel files
+const baseData = await reader.readFile('base.xlsx')
+const targetData = await reader.readFile('target.xlsx')
+
+// Compare files
+const changes = comparator.compare(baseData, targetData)
+
+// Generate change record
+const record = comparator.createChangeRecord('target.xlsx', changes)
+
+// Output in desired format
+const textOutput = generator.generateText(record)
+console.log(textOutput)
+```
+
+## Comparison Options
+
+| Option | CLI Flag | Description |
+|--------|----------|-------------|
+| Ignore case | `--ignore-case` | Case-insensitive text comparison |
+| Trim whitespace | `--no-trim` | Don't trim whitespace (default: true) |
+| Ignore empty cells | `--ignore-empty` | Skip empty cells in comparison |
+
+## Output Formats
+
+- **text** (default): Human-readable text with emoji indicators
+- **json**: Structured JSON for programmatic processing
+- **markdown**: Formatted Markdown for documentation
+- **csv**: Comma-separated values for data analysis
+
+## Development
+
+```bash
+# Run tests
+npm test
+
+# Run tests with coverage
+npm test -- --coverage
+
+# Type check
+npm run type-check
+
+# Lint
+npm run lint
+
+# Format
+npm run format
+```
+
+## License
+
+MIT
+
+---
+
+# Excel 文件对比工具
+
+一个强大的 Excel 文件对比工具，可以检测多个 Excel 文件之间的变化并生成详细的变更记录。
+
+## 功能特性
+
+- ✅ **单元格级别对比**：检测新增、删除和修改
+- 📊 **多工作表支持**：对比工作簿中的所有工作表
+- 🎯 **灵活的对比模式**：
+  - 忽略大小写
+  - 修剪空白字符
+  - 忽略空单元格
+- 📝 **多种输出格式**：文本、JSON、Markdown、CSV
+- 🚀 **CLI 接口**：便捷的命令行使用
+- 🌐 **Web 界面**：现代化、用户友好的 Web UI
+
+## 安装
+
+```bash
+npm install
+npm run build
+```
+
+## 使用方法
+
+### Web 界面
+
+启动 Web 服务器：
+
+```bash
+npm run web
+```
+
+然后在浏览器中打开 http://localhost:3000
+
+功能特性：
+- 拖拽上传文件
+- 多目标文件对比
+- 实时对比选项
+- 多种格式下载结果
+- 复制结果到剪贴板
+
+**界面截图：**
+
+### 上传和配置界面
+
+![上传和配置界面](./result1.png)
+
+### 对比结果展示
+
+![对比结果展示](./result2.png)
+
+### 命令行
+
+```bash
+# 使用文本输出对比文件
+npx ts-node src/cli.ts base.xlsx target1.xlsx target2.xlsx
+
+# 以指定格式输出到文件
+npx ts-node src/cli.ts base.xlsx target.xlsx -o changes_{name}.md -f markdown
+
+# 忽略大小写和空单元格
+npx ts-node src/cli.ts base.xlsx target.xlsx --ignore-case --ignore-empty
+
+# 导出为 CSV
+npx ts-node src/cli.ts base.xlsx target.xlsx -o changes_{name}.csv -f csv
+```
+
+### 编程方式使用
+
+```typescript
+import { ExcelReader, ExcelComparator, ChangeRecordGenerator } from './src'
+
+const reader = new ExcelReader()
+const comparator = new ExcelComparator({ ignoreEmptyCells: true })
+const generator = new ChangeRecordGenerator()
+
+// 读取 Excel 文件
+const baseData = await reader.readFile('base.xlsx')
+const targetData = await reader.readFile('target.xlsx')
+
+// 对比文件
+const changes = comparator.compare(baseData, targetData)
+
+// 生成变更记录
+const record = comparator.createChangeRecord('target.xlsx', changes)
+
+// 以所需格式输出
+const textOutput = generator.generateText(record)
+console.log(textOutput)
+```
+
+## 对比选项
+
+| 选项 | CLI 标志 | 描述 |
+|------|----------|------|
+| 忽略大小写 | `--ignore-case` | 不区分大小写的文本对比 |
+| 修剪空白 | `--no-trim` | 不修剪空白（默认：true） |
+| 忽略空单元格 | `--ignore-empty` | 在对比中跳过空单元格 |
+
+## 输出格式
+
+- **text**（默认）：带 emoji 指示符的人类可读文本
+- **json**：用于程序处理的结构化 JSON
+- **markdown**：用于文档的格式化 Markdown
+- **csv**：用于数据分析的逗号分隔值
+
+## 开发
+
+```bash
+# 运行测试
+npm test
+
+# 运行测试并生成覆盖率报告
+npm test -- --coverage
+
+# 类型检查
+npm run type-check
+
+# 代码检查
+npm run lint
+
+# 代码格式化
+npm run format
+```

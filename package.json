@@ -1,0 +1,64 @@
+{
+  "name": "excel-file-diff",
+  "version": "1.0.0",
+  "description": "Excel file comparison tool with change tracking",
+  "main": "dist/index.js",
+  "bin": {
+    "excel-diff": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/cli.ts",
+    "web": "ts-node src/server.ts",
+    "start": "npm run build && node dist/server.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint"
+  },
+  "keywords": [
+    "excel",
+    "xlsx",
+    "diff",
+    "comparison",
+    "change-tracking"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@js-preview/excel": "^1.7.14",
+    "commander": "^12.0.0",
+    "cors": "^2.8.6",
+    "exceljs": "^4.4.0",
+    "express": "^4.22.1",
+    "multer": "^1.4.5-lts.1",
+    "xlsx": "^0.18.5",
+    "xlsx-populate": "^1.21.0",
+    "xlsx-style": "^0.8.13"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.25",
+    "@types/jest": "^29.5.0",
+    "@types/multer": "^1.4.13",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.50.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.0.0",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

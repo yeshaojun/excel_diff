@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Excel 文件对比工具</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="/node_modules/@js-preview/excel/lib/index.css">
+  <script src="/node_modules/@js-preview/excel/lib/index.umd.js"></script>
+</head>
+  <div class="app">
+    <header class="header">
+      <div class="header-content">
+        <div class="logo">
+          <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14,2 14,8 20,8"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
+            <line x1="12" y1="12" x2="12" y2="18"/>
+          </svg>
+          <span class="logo-text">Excel 文件对比工具</span>
+        </div>
+        <p class="tagline">上传并对比多个Excel文件，查看详细的改动记录</p>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="upload-section">
+        <div class="upload-grid">
+          <div class="upload-card base-card">
+            <div class="card-header">
+              <span class="card-label">基准文件</span>
+              <span class="card-badge">参考文件</span>
+            </div>
+            <div class="dropzone" id="baseDropzone">
+              <input type="file" id="baseFile" accept=".xlsx,.xls" hidden>
+              <div class="dropzone-content" id="baseDropzoneContent">
+                <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17,8 12,3 7,8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <p class="dropzone-text">拖放基准 Excel 文件到这里</p>
+                <p class="dropzone-hint">或点击浏览文件</p>
+              </div>
+              <div class="file-preview" id="basePreview">
+                <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14,2 14,8 20,8"/>
+                </svg>
+                <span class="file-name" id="baseFileName"></span>
+                <button class="remove-btn" id="removeBase" type="button" aria-label="移除文件">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="file-list" id="baseFileList"></div>
+            </div>
+          </div>
+
+          <div class="upload-card target-card">
+            <div class="card-header">
+              <span class="card-label">对比文件</span>
+              <span class="card-badge">要对比的文件</span>
+            </div>
+            <div class="dropzone" id="targetDropzone">
+              <input type="file" id="targetFiles" accept=".xlsx,.xls" multiple hidden>
+              <div class="dropzone-content" id="targetDropzoneContent">
+                <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17,8 12,3 7,8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <p class="dropzone-text">拖放对比 Excel 文件到这里</p>
+                <p class="dropzone-hint">或点击浏览文件（支持多个）</p>
+              </div>
+              <div class="file-list" id="targetFileList"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="options-panel">
+          <h3 class="options-title">对比选项</h3>
+          <div class="options-grid">
+            <label class="option-item">
+              <input type="checkbox" id="ignoreCase">
+              <span class="checkbox-custom"></span>
+              <span class="option-label">忽略大小写</span>
+            </label>
+            <label class="option-item">
+              <input type="checkbox" id="trimWhitespace" checked>
+              <span class="checkbox-custom"></span>
+              <span class="option-label">去除空白字符</span>
+            </label>
+            <label class="option-item">
+              <input type="checkbox" id="ignoreEmpty">
+              <span class="checkbox-custom"></span>
+              <span class="option-label">忽略空单元格</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="format-panel">
+          <h3 class="format-title">输出格式</h3>
+          <div class="format-options">
+            <label class="format-item">
+              <input type="radio" name="format" value="text" checked>
+              <span class="radio-custom"></span>
+              <span class="format-label">文本</span>
+            </label>
+            <label class="format-item">
+              <input type="radio" name="format" value="json">
+              <span class="radio-custom"></span>
+              <span class="format-label">JSON</span>
+            </label>
+            <label class="format-item">
+              <input type="radio" name="format" value="markdown">
+              <span class="radio-custom"></span>
+              <span class="format-label">Markdown</span>
+            </label>
+            <label class="format-item">
+              <input type="radio" name="format" value="csv">
+              <span class="radio-custom"></span>
+              <span class="format-label">CSV</span>
+            </label>
+          </div>
+        </div>
+
+        <button class="compare-btn" id="compareBtn" disabled>
+          <span class="btn-text">开始对比</span>
+          <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12,5 19,12 12,19"/>
+          </svg>
+        </button>
+      </section>
+
+      <section class="results-section" id="resultsSection" hidden>
+        <div class="results-header">
+          <h2 class="results-title">对比结果</h2>
+          <div class="download-buttons">
+            <button class="download-btn" id="downloadBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7,10 12,15 17,10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <span>下载报告</span>
+            </button>
+            <button class="download-btn marked" id="downloadMarkedBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7,10 12,15 17,10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <span>下载带标记的Excel</span>
+            </button>
+            <button class="preview-btn" id="previewBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-11 8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <span>在线预览</span>
+            </button>
+            <button class="copy-btn" id="copyBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              <span>复制结果</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="summary-cards" id="summaryCards"></div>
+
+        <div class="results-content">
+          <div class="results-tabs">
+            <button class="tab-btn active" data-tab="all">全部变更</button>
+            <button class="tab-btn" data-tab="modified">修改</button>
+            <button class="tab-btn" data-tab="added">新增</button>
+            <button class="tab-btn" data-tab="deleted">删除</button>
+          </div>
+          <div class="results-body" id="resultsBody">
+            <pre class="results-output" id="resultsOutput"></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- Preview Modal -->
+      <div class="preview-modal" id="previewModal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>带标记的Excel预览</h3>
+            <button class="modal-close-btn" id="closePreview">✕</button>
+          </div>
+          <div class="modal-body">
+            <div class="preview-content" id="previewContent">
+              <p class="preview-hint">点击"在线预览"按钮查看带标记的Excel文件</p>
+            </div>
+            <div class="excel-preview-container" id="excelPreviewContainer">
+              <!-- @js-preview/excel 渲染容器 -->
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-spinner">
+          <div class="spinner"></div>
+          <p class="loading-text">正在处理中...</p>
+        </div>
+      </div>
+
+      <div class="toast error" id="errorToast" style="display: none;">
+        <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="15" y1="9" x2="9" y2="15"/>
+          <line x1="9" y1="9" x2="15" y2="15"/>
+        </svg>
+        <span class="toast-message" id="errorMessage"></span>
+        <button class="toast-close" id="closeError" aria-label="关闭">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="toast success" id="successToast" style="display: none;">
+        <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22,4 12,14.01 9,11.01"/>
+        </svg>
+        <span class="toast-message" id="successMessage"></span>
+        <button class="toast-close" id="closeSuccess" aria-label="关闭">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>Excel 文件对比工具 - 专业版本</p>
+    </footer>
+  </div>
+
+  <script src="app-v2.js"></script>
+</body>
+</html>

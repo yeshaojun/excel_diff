@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Excel File Diff - Compare Excel Files</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <div class="logo">
+          <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14,2 14,8 20,8"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
+            <line x1="12" y1="12" x2="12" y2="18"/>
+          </svg>
+          <span class="logo-text">Excel Diff</span>
+        </div>
+        <p class="tagline">Compare Excel files and detect changes instantly</p>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Upload Section -->
+      <section class="upload-section">
+        <div class="upload-grid">
+          <!-- Base File Upload -->
+          <div class="upload-card base-card">
+            <div class="card-header">
+              <span class="card-label">Base File</span>
+              <span class="card-badge">Reference</span>
+            </div>
+            <div class="dropzone" id="baseDropzone">
+              <input type="file" id="baseFile" accept=".xlsx,.xls" hidden>
+              <div class="dropzone-content">
+                <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17,8 12,3 7,8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <p class="dropzone-text">Drop base Excel file here</p>
+                <p class="dropzone-hint">or click to browse</p>
+              </div>
+              <div class="file-preview" id="basePreview">
+                <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14,2 14,8 20,8"/>
+                </svg>
+                <span class="file-name" id="baseFileName"></span>
+                <button class="remove-btn" id="removeBase" type="button" aria-label="Remove file">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Target Files Upload -->
+          <div class="upload-card target-card">
+            <div class="card-header">
+              <span class="card-label">Target Files</span>
+              <span class="card-badge">Compare</span>
+            </div>
+            <div class="dropzone" id="targetDropzone">
+              <input type="file" id="targetFiles" accept=".xlsx,.xls" multiple hidden>
+              <div class="dropzone-content">
+                <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17,8 12,3 7,8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <p class="dropzone-text">Drop target Excel files here</p>
+                <p class="dropzone-hint">or click to browse (multiple)</p>
+              </div>
+              <div class="file-list" id="targetFileList"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Options Panel -->
+        <div class="options-panel">
+          <h3 class="options-title">Comparison Options</h3>
+          <div class="options-grid">
+            <label class="option-item">
+              <input type="checkbox" id="ignoreCase">
+              <span class="checkbox-custom"></span>
+              <span class="option-label">Ignore case</span>
+            </label>
+            <label class="option-item">
+              <input type="checkbox" id="trimWhitespace" checked>
+              <span class="checkbox-custom"></span>
+              <span class="option-label">Trim whitespace</span>
+            </label>
+            <label class="option-item">
+              <input type="checkbox" id="ignoreEmpty">
+              <span class="checkbox-custom"></span>
+              <span class="option-label">Ignore empty cells</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Output Format -->
+        <div class="format-panel">
+          <h3 class="format-title">Output Format</h3>
+          <div class="format-options">
+            <label class="format-item">
+              <input type="radio" name="format" value="text" checked>
+              <span class="radio-custom"></span>
+              <span class="format-label">Text</span>
+            </label>
+            <label class="format-item">
+              <input type="radio" name="format" value="json">
+              <span class="radio-custom"></span>
+              <span class="format-label">JSON</span>
+            </label>
+            <label class="format-item">
+              <input type="radio" name="format" value="markdown">
+              <span class="radio-custom"></span>
+              <span class="format-label">Markdown</span>
+            </label>
+            <label class="format-item">
+              <input type="radio" name="format" value="csv">
+              <span class="radio-custom"></span>
+              <span class="format-label">CSV</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Compare Button -->
+        <button class="compare-btn" id="compareBtn" disabled>
+          <span class="btn-text">Compare Files</span>
+          <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12,5 19,12 12,19"/>
+          </svg>
+        </button>
+      </section>
+
+      <!-- Results Section -->
+      <section class="results-section" id="resultsSection" hidden>
+        <div class="results-header">
+          <h2 class="results-title">Comparison Results</h2>
+          <div class="download-buttons">
+            <button class="download-btn" id="downloadBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7,10 12,15 17,10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <span>Download</span>
+            </button>
+            <button class="copy-btn" id="copyBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              <span>Copy</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards" id="summaryCards"></div>
+
+        <!-- Results Content -->
+        <div class="results-content">
+          <div class="results-tabs">
+            <button class="tab-btn active" data-tab="all">All Changes</button>
+            <button class="tab-btn" data-tab="modified">Modified</button>
+            <button class="tab-btn" data-tab="added">Added</button>
+            <button class="tab-btn" data-tab="deleted">Deleted</button>
+          </div>
+          <div class="results-body" id="resultsBody">
+            <pre class="results-output" id="resultsOutput"></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- Loading Overlay -->
+      <!-- <div class="loading-overlay" id="loadingOverlay" hidden>
+        <div class="loading-spinner">
+          <div class="spinner"></div>
+          <p class="loading-text">Comparing files...</p>
+        </div>
+      </div> -->
+
+      <!-- Error Toast -->
+      <div class="toast error" id="errorToast" hidden>
+        <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="15" y1="9" x2="9" y2="15"/>
+          <line x1="9" y1="9" x2="15" y2="15"/>
+        </svg>
+        <span class="toast-message" id="errorMessage"></span>
+        <button class="toast-close" id="closeError" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Success Toast -->
+      <div class="toast success" id="successToast" hidden>
+        <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22,4 12,14.01 9,11.01"/>
+        </svg>
+        <span class="toast-message" id="successMessage"></span>
+        <button class="toast-close" id="closeSuccess" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>Built with precision. Compare with confidence.</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Excel 对比工具 - 测试页面</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    body {
+      background: #0f172a;
+      color: #f1f5f9;
+      padding: 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    
+    .container {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 30px;
+    }
+    
+    .title {
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: #14b8a6;
+      text-align: center;
+    }
+    
+    .section {
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #0f172a;
+      border-radius: 8px;
+    }
+    
+    .section-title {
+      font-size: 18px;
+      margin-bottom: 15px;
+      color: #f1f5f9;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 10px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+    
+    input[type="file"] {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      color: #f1f5f9;
+      font-size: 14px;
+    }
+    
+    .btn {
+      background: #14b8a6;
+      color: #0f172a;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-block;
+      text-align: center;
+    }
+    
+    .btn:hover {
+      background: #0d9488;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .file-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .file-item {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .file-name {
+      color: #f1f5f9;
+      font-weight: 500;
+    }
+    
+    .file-size {
+      color: #94a3b8;
+      font-size: 12px;
+      background: #334155;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    
+    .remove-btn {
+      background: #ef4444;
+      color: #f1f5f9;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 1;
+    }
+    
+    .remove-btn:hover {
+      background: #dc2626;
+    }
+    
+    .status {
+      margin-top: 10px;
+      padding: 10px 16px;
+      border-radius: 6px;
+      background: #253347;
+      color: #f1f5f9;
+      font-size: 14px;
+    }
+    
+    .status.success {
+      background: #065f46;
+      color: #f1f5f9;
+    }
+    
+    .status.error {
+      background: #dc2626;
+      color: #f1f5f9;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="title">🧪 Excel 文件对比工具 - 测试页面</h1>
+    
+    <div class="section">
+      <h2 class="section-title">📤 第一步：上传基准文件</h2>
+      <div class="form-group">
+        <input type="file" id="baseFileInput" accept=".xlsx,.xls">
+        <div class="file-list" id="baseFileList"></div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <h2 class="section-title">📄 第二步：上传对比文件</h2>
+      <div class="form-group">
+        <input type="file" id="targetFileInput" accept=".xlsx,.xls" multiple>
+        <div class="file-list" id="targetFileList"></div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <h2 class="section-title">⚙ 第三步：开始对比</h2>
+      <button id="compareBtn" class="btn disabled">开始对比</button>
+      <div id="status" class="status hidden"></div>
+    </div>
+    
+    <div class="section">
+      <h2 class="section-title">📋 第四步：查看结果</h2>
+      <div id="results"></div>
+    </div>
+  </div>
+  
+  <script>
+    var baseFile = null;
+    var targetFiles = [];
+    
+    function formatFileSize(bytes) {
+      if (!bytes) return '0 B';
+      var k = 1024;
+      var sizes = ['B', 'KB', 'MB', 'GB'];
+      var i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+    
+    // Base file handling
+    var baseInput = document.getElementById('baseFileInput');
+    var baseFileList = document.getElementById('baseFileList');
+    
+    baseInput.addEventListener('change', function(e) {
+      var files = Array.from(e.target.files);
+      if (files.length === 0) return;
+      
+      var file = files[0];
+      var ext = file.name.split('.').pop().toLowerCase();
+      
+      if (!['xlsx', 'xls'].includes(ext)) {
+        showStatus('error', '请上传 .xlsx 或 .xls 文件');
+        return;
+      }
+      
+      baseFile = file;
+      renderBaseFile();
+      updateCompareButton();
+    });
+    
+    function removeBaseFile() {
+      baseFile = null;
+      baseInput.value = '';
+      renderBaseFile();
+      updateCompareButton();
+    }
+    
+    function renderBaseFile() {
+      if (!baseFile) {
+        baseFileList.innerHTML = '';
+        return;
+      }
+      
+      var html = '<div class="file-item">';
+      html += '  <span class="file-name">' + baseFile.name + '</span>';
+      html += '  <span class="file-size">' + formatFileSize(baseFile.size) + '</span>';
+      html += '  <button class="remove-btn" onclick="removeBaseFile()">×</button>';
+      html += '</div>';
+      
+      baseFileList.innerHTML = html;
+    }
+    
+    // Target files handling
+    var targetInput = document.getElementById('targetFileInput');
+    var targetFileList = document.getElementById('targetFileList');
+    
+    targetInput.addEventListener('change', function(e) {
+      var files = Array.from(e.target.files);
+      files.forEach(function(file) {
+        var ext = file.name.split('.').pop().toLowerCase();
+        if (!['xlsx', 'xls'].includes(ext)) {
+          return;
+        }
+        if (!targetFiles.some(function(f) { return f.name === file.name; })) {
+          targetFiles.push(file);
+          renderTargetFiles();
+          updateCompareButton();
+        }
+      });
+      });
+    
+    function removeTargetFile(index) {
+      targetFiles.splice(index, 1);
+      renderTargetFiles();
+      updateCompareButton();
+    }
+    
+    function renderTargetFiles() {
+      if (targetFiles.length === 0) {
+        targetFileList.innerHTML = '';
+        return;
+      }
+      
+      var html = '';
+      targetFiles.forEach(function(file, index) {
+        html += '<div class="file-item">';
+        html += '  <span class="file-name">' + file.name + '</span>';
+        html += '  <span class="file-size">' + formatFileSize(file.size) + '</span>';
+        html += '  <button class="remove-btn" onclick="removeTargetFile(' + index + ')">×</button>';
+        html += '</div>';
+      });
+      
+      targetFileList.innerHTML = html;
+    }
+    
+    // Compare functionality
+    async function compareFiles() {
+      if (!baseFile || targetFiles.length === 0) {
+        showStatus('error', '请先上传基准文件和对比文件');
+        return;
+      }
+      
+      showStatus('success', '正在对比中...');
+      
+      var formData = new FormData();
+      formData.append('base', baseFile);
+      targetFiles.forEach(function(file) {
+        formData.append('targets', file);
+      });
+      
+      try {
+        var response = await fetch('/api/compare', {
+          method: 'post',
+          body: formData
+        });
+        
+        if (!response.ok) {
+          throw new Error('对比失败');
+        }
+        
+        var result = await response.json();
+        displayResults(result);
+        showStatus('success', '对比完成！发现 ' + result.totalChanges + ' 处变更');
+      } catch (error) {
+        showStatus('error', '对比失败：' + error.message);
+      }
+    }
+    
+    function displayResults(result) {
+      var resultsDiv = document.getElementById('results');
+      var html = '<h3>对比结果</h3>';
+      
+      var added = result.changeCounts.added || 0;
+      var modified = result.changeCounts.modified || 0;
+      var deleted = result.changeCounts.deleted || 0;
+      var total = added + modified + deleted;
+      
+      html += '<div style="display: flex; gap: 15px; flex-wrap: wrap;">';
+      html += '<div style="background: #0f172a; padding: 15px; border-radius: 8px; flex: 1;">';
+      html += '<div><strong>总变更:</strong> ' + total + '</div>';
+      html += '</div>';
+      html += '<div style="background: #0f172a; padding: 15px; border-radius: 8px; flex: 1;">';
+      html += '<div style="color: #22c55e;"><strong>' + added + '</strong></div>';
+      html += '</div>';
+      html += '<div style="background: #0f172a; padding: 15px; border-radius: 8px; flex: 1;">';
+      html += '<div style="color: #ef4444;"><strong>' + modified + '</strong></div>';
+      html += '</div>';
+      html += '<div style="background: #0f172a; padding: 15px; border-radius: 8px; flex: 1;">';
+      html += '<div style="color: #f97316;"><strong>' + deleted + '</strong></div>';
+      html += '</div>';
+      html += '</div>';
+      
+      if (result.totalChanges === 0) {
+        html += '<p style="text-align: center; color: #94a3b8; padding: 40px;">没有发现变更</p>';
+      } else {
+        html += '<h4>详细变更列表：</h4>';
+        
+        if (result.raw && result.raw.records) {
+          result.raw.records.forEach(function(record, recordIndex) {
+            html += '<h5 style="margin-top: 30px; color: #14b8a6;">文件: ' + record.fileName + '</h5>';
+            
+            var changes = record.changes.slice(0, 10); // 只显示前10个变更
+            if (changes.length === 0) {
+              html += '<p style="color: #94a3b8;">没有变更</p>';
+              return;
+            }
+            
+            html += '<table style="width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 8px; margin-bottom: 20px;">';
+            html += '<tr><th style="text-align: left; padding: 12px; background: #253347;">工作表</th>';
+            html += '<th style="text-align: left; padding: 12px; background: #253347;">单元格</th>';
+            html += '<th style="text-align: left; padding: 12px; background: #253347;">类型</th>';
+            html += '<th style="text-align: left; padding: 12px; background: #253347;">修改前</th>';
+            html += '<th style="text-align: left; padding: 12px; background: # #253347;">修改后</th></tr>';
+            
+            changes.forEach(function(change) {
+              html += '<tr>';
+              
+              // 新增单元格 - 绿色
+              if (change.changeType === 'added') {
+                html += '<td style="color: #22c55e; background: #0f172a;">' + change.sheet + '</td>';
+                html += '<td>' + change.cell + '</td>';
+                html += '<td>新增</td>';
+                html += '<td>-</td>';
+                html += '<td>-</td>';
+                html += '<td>-</td>';
+              }
+              // 修改单元格 - 红色
+              else if (change.changeType === 'modified') {
+                html += '<td style="color: #ef4444;">' + change.sheet + '</td>';
+                html += '<td>' + change.cell + '</td>';
+                html += '<td>修改</td>';
+                html += '<td>' + (change.oldValue || '') + '</td>';
+                html += '<td>' + (change.newValue || '') + '</td>';
+              }
+              // 删除单元格 - 粉色
+              else if (change.changeType === 'deleted') {
+                html += '<td style="color: #f97316;">' + change.sheet + '</td>';
+                html += '<td>' + change.cell + '</td>';
+                html += '<td>删除</td>';
+                html += '<td>' + (change.oldValue || '') + '</td>';
+                html += '<td>-</td>';
+                html += '<td>-</td>';
+              }
+              
+              html += '</tr>';
+            });
+            
+            html += '</table>';
+            
+            if (record.changes.length > 10) {
+              html += '<p style="color: #94a3b8; margin-top: 10px;">...还有 ' + (record.changes.length - 10) + ' 处变更</p>';
+            }
+          });
+        }
+      }
+      
+      resultsDiv.innerHTML = html;
+    }
+    
+    function updateCompareButton() {
+      var compareBtn = document.getElementById('compareBtn');
+      if (compareBtn) {
+        compareBtn.disabled = !(baseFile && targetFiles.length > 0);
+      }
+    }
+    
+    function showStatus(type, message) {
+      var statusEl = document.getElementById('status');
+      statusEl.className = 'status ' + type;
+      statusEl.textContent = message;
+      statusEl.classList.remove('hidden');
+    }
+    
+    // Initialize
+    updateCompareButton();
+  </script>
+</body>
+</html>
