@@ -328,14 +328,23 @@
       a.href = url;
 
       // Get filename from response header
+      // Support both standard and RFC 5987 encoded filenames
       const contentDisposition = response.headers.get('Content-Disposition');
       let filename = 'marked_changes.xlsx';
       if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="?([^";\n]+)"?/);
-        if (filenameMatch) {
-          filename = filenameMatch[1];
+        // Try RFC 5987 format first: filename*=UTF-8''encoded_filename
+        const rfc5987Match = contentDisposition.match(/filename\*=UTF-8''([^;\n]+)/);
+        if (rfc5987Match) {
+          filename = decodeURIComponent(rfc5987Match[1]);
+        } else {
+          // Fallback to standard format: filename="filename"
+          const filenameMatch = contentDisposition.match(/filename="?([^";\n]+)"?/);
+          if (filenameMatch) {
+            filename = filenameMatch[1];
+          }
         }
       }
+
 
       a.download = filename;
       document.body.appendChild(a);

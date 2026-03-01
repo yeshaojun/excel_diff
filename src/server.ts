@@ -8,6 +8,19 @@ import { ChangeRecordGenerator } from './ChangeRecordGenerator'
 import { ExcelExporter } from './ExcelExporter'
 import { messages } from './config'
 
+/**
+ * Decode multer's latin1 encoded filename to proper UTF-8
+ * Multer uses latin1 encoding by default which causes Chinese characters to be garbled
+ */
+function decodeFilename(filename: string): string {
+  try {
+    // Convert latin1 encoded string back to buffer, then decode as utf-8
+    return Buffer.from(filename, 'latin1').toString('utf8')
+  } catch {
+    return filename
+  }
+}
+
 const app = express()
 const PORT = process.env.PORT || 3000
 const PUBLIC_DIR = join(process.cwd(), 'public')
@@ -94,18 +107,22 @@ app.post(
           else if (change.changeType === 'deleted') totalDeleted++
         }
 
-        const record = comparator.createChangeRecord(targetFile.originalname, changes)
+        // Decode filename to fix Chinese character encoding
+        const decodedFilename = decodeFilename(targetFile.originalname)
+        const record = comparator.createChangeRecord(decodedFilename, changes)
         records.push(record)
       }
+
 
       const format = options.format || 'text'
 
       // Always populate raw data for frontend display
       const raw = {
-        baseFile: baseFile.originalname,
-        targetFiles: targetFiles.map((f: any) => f.originalname),
+        baseFile: decodeFilename(baseFile.originalname),
+        targetFiles: targetFiles.map((f: any) => decodeFilename(f.originalname)),
         records,
       }
+
 
       let output = ''
       if (format === 'json') {
@@ -225,15 +242,22 @@ app.post(
       }
 
       // Output is always xlsx format (xls is converted to xlsx above)
-      const downloadFilename = 'marked_changes.xlsx'
+      // Generate filename based on original target file name
+      const originalFilename = decodeFilename(targetFiles[0].originalname)
+      const extIndex = originalFilename.lastIndexOf('.')
+      const baseName = extIndex > 0 ? originalFilename.substring(0, extIndex) : originalFilename
+      const downloadFilename = `${baseName}_标记.xlsx`
+
+      // Use RFC 5987 encoding for Chinese filename support
+      const encodedFilename = encodeURIComponent(downloadFilename)
 
       res.setHeader(
         'Content-Type',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       )
-      res.setHeader('Content-Disposition', `attachment; filename="${downloadFilename}"`)
+      res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodedFilename}`)
       res.setHeader('X-Preview-Id', previewId)
-      res.setHeader('X-Original-Filename', downloadFilename)
+      res.setHeader('X-Original-Filename', encodedFilename)
       res.send(excelBuffer)
       console.log('Output buffer size:', excelBuffer.byteLength)
       console.log('=== /api/export-marked-excel END ===\n')

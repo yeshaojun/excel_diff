@@ -358,7 +358,9 @@
         const mExt = /\.[a-zA-Z0-9]+$/.exec(filenameFromDisposition)
         if (mExt) ext = mExt[0]
       }
-      a.download = `标记改动的Excel文件${ext}`
+      // Use the filename from server response, fallback to default
+      a.download = filenameFromDisposition || `标记改动的Excel文件${ext}`
+
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)

@@ -1,2 +1,0 @@
-- TC-B: Added data creation script tests/e2e/create_tc_b_data.js to prepare base.xls/target.xls for end-to-end tests; ensures .xls extension for annotated exports.
-- TC-B: Added evidence template tests/e2e/evidence_tc_b_template.md to capture test results and patches.
