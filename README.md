@@ -15,6 +15,7 @@ A powerful Excel file comparison tool that detects changes between multiple Exce
 - 📝 **Multiple output formats**: Text, JSON, Markdown, CSV
 - 🚀 **CLI interface**: Easy command-line usage
 - 🌐 **Web interface**: Modern, user-friendly web UI
+- 🖥️ **Desktop app**: Cross-platform Electron desktop application
 
 ## Installation
 
@@ -53,10 +54,40 @@ Features:
 
 ![Comparison Results Display](./result2.png)
 
-### Command Line
+### Electron Desktop App
+
+Start the Electron desktop application:
+
+```bash
+# Development mode
+npm run electron:dev
+
+# Or build and run
+npm run build:all
+npm run electron:start
+```
+
+Features:
+- Native desktop experience
+- File menu for quick file selection
+- Keyboard shortcuts (Ctrl+O, Ctrl+Shift+O)
+- Built-in Excel preview
+- Same functionality as web interface
+
+### Build Desktop App
+
+```bash
+# Build for current platform
+npm run dist
+
+# Build for Windows
+npm run dist:win
+
+# Build portable version
+npm run dist:portable
+```
 
 ### Command Line
-
 ```bash
 # Compare files with text output
 npx ts-node src/cli.ts base.xlsx target1.xlsx target2.xlsx

@@ -1,10 +1,15 @@
 /**
  * Excel 对比工具 - 中文版前端
  * 处理文件上传、对比和结果显示
+ * 支持 Electron 桌面环境和 Web 浏览器
  */
 
 ;(function () {
   'use strict'
+
+  // 检测是否在 Electron 环境中运行
+  const isElectron = typeof window !== 'undefined' && window.electronAPI?.isElectron === true
+  console.log('运行环境:', isElectron ? 'Electron 桌面应用' : 'Web 浏览器')
 
   // 状态管理
   const state = {
@@ -29,6 +34,7 @@
     targetDropzone: document.getElementById('targetDropzone'),
     targetFileInput: document.getElementById('targetFiles'),
     targetFileList: document.getElementById('targetFileList'),
+    xlsFormatWarning: document.getElementById('xlsFormatWarning'),
 
     // Options
     ignoreCase: document.getElementById('ignoreCase'),
@@ -88,6 +94,13 @@
     setTimeout(() => hideToast('success'), 3000)
   }
 
+  function showWarning(message) {
+    console.log('警告:', message)
+    elements.successMessage.textContent = '⚠️ ' + message
+    elements.successToast.hidden = false
+    elements.successToast.classList.add('visible')
+    setTimeout(() => hideToast('success'), 5000)
+  }
   function hideToast(type) {
     const toast = type === 'error' ? elements.errorToast : elements.successToast
     toast.classList.remove('visible')
@@ -111,6 +124,32 @@
     console.log('更新对比按钮状态:', elements.compareBtn.disabled)
   }
 
+  // 检查是否有 .xls 文件并显示警告
+  function updateXlsWarning() {
+    if (!elements.xlsFormatWarning) return
+
+    let hasXls = false
+
+    // 检查基准文件
+    if (state.baseFile) {
+      const baseExt = getFileExtension(state.baseFile.name)
+      if (baseExt === 'xls') hasXls = true
+    }
+
+    // 检查对比文件
+    if (!hasXls && state.targetFiles.length > 0) {
+      for (const file of state.targetFiles) {
+        const ext = getFileExtension(file.name)
+        if (ext === 'xls') {
+          hasXls = true
+          break
+        }
+      }
+    }
+
+    elements.xlsFormatWarning.style.display = hasXls ? 'flex' : 'none'
+  }
+
   // 文件处理
   function handleBaseFile(file) {
     console.log('处理基准文件:', file.name)
@@ -124,6 +163,7 @@
     elements.baseFileName.textContent = `${file.name} (${formatFileSize(file.size)})`
     elements.basePreview.classList.add('visible')
     elements.baseDropzone.querySelector('.dropzone-content').style.display = 'none'
+    updateXlsWarning()
     updateCompareButton()
   }
 
@@ -133,6 +173,7 @@
     elements.baseFileInput.value = ''
     elements.basePreview.classList.remove('visible')
     elements.baseDropzone.querySelector('.dropzone-content').style.display = ''
+    updateXlsWarning()
     updateCompareButton()
   }
 
@@ -151,6 +192,7 @@
 
     state.targetFiles.push(file)
     renderTargetFiles()
+    updateXlsWarning()
     updateCompareButton()
   }
 
@@ -158,6 +200,7 @@
     console.log('移除对比文件:', index)
     state.targetFiles.splice(index, 1)
     renderTargetFiles()
+    updateXlsWarning()
     updateCompareButton()
   }
 
@@ -240,6 +283,50 @@
         onFile(files[0])
       }
     })
+  }
+
+  // Electron 文件选择处理
+  function setupElectronFileHandlers() {
+    if (!isElectron) return
+
+    // 监听主进程发送的文件选择事件
+    window.electronAPI.onFileSelected((data) => {
+      console.log('收到 Electron 文件选择:', data)
+      if (data.type === 'base') {
+        fetchFileFromPath(data.path).then(file => {
+          if (file) handleBaseFile(file)
+        })
+      }
+    })
+
+    window.electronAPI.onFilesSelected((data) => {
+      console.log('收到 Electron 多文件选择:', data)
+      if (data.type === 'targets') {
+        data.paths.forEach(path => {
+          fetchFileFromPath(path).then(file => {
+            if (file) addTargetFile(file)
+          })
+        })
+      }
+    })
+  }
+
+  // 通过 API 获取文件 (Electron 环境)
+  async function fetchFileFromPath(filePath) {
+    try {
+      const fileName = filePath.split(/[\\/]/).pop()
+      const response = await fetch('/api/read-file?path=' + encodeURIComponent(filePath))
+      if (!response.ok) {
+        showError('无法读取文件: ' + fileName)
+        return null
+      }
+      const blob = await response.blob()
+      return new File([blob], fileName, { type: blob.type })
+    } catch (error) {
+      console.error('读取文件失败:', error)
+      showError('读取文件失败: ' + error.message)
+      return null
+    }
   }
 
   // 对比文件
@@ -656,6 +743,7 @@
   function init() {
     console.log('初始化 Excel 对比工具')
     setupEventListeners()
+    setupElectronFileHandlers()
   }
 
   // DOM 加载完成后运行

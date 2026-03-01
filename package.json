@@ -1,16 +1,24 @@
 {
   "name": "excel-file-diff",
   "version": "1.0.0",
-  "description": "Excel file comparison tool with change tracking",
-  "main": "dist/index.js",
+  "description": "Excel 文件对比工具 - 支持单元格级别的变更检测",
+  "main": "dist/electron/main.js",
   "bin": {
     "excel-diff": "./dist/cli.js"
   },
   "scripts": {
     "build": "tsc",
+    "build:electron": "tsc -p tsconfig.electron.json",
+    "build:all": "npm run build && npm run build:electron",
     "dev": "ts-node src/cli.ts",
     "web": "ts-node src/server.ts",
+    "electron:dev": "npm run build:all && electron .",
+    "electron:start": "electron .",
     "start": "npm run build && node dist/server.js",
+    "pack": "npm run build:all && electron-builder --dir",
+    "dist": "npm run build:all && electron-builder",
+    "dist:win": "npm run build:all && electron-builder --win",
+    "dist:portable": "npm run build:all && electron-builder --win portable",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -26,10 +34,13 @@
     "xlsx",
     "diff",
     "comparison",
-    "change-tracking"
+    "change-tracking",
+    "electron",
+    "desktop-app"
   ],
   "author": "",
   "license": "MIT",
+  "homepage": "https://github.com/yourusername/excel-file-diff#readme",
   "dependencies": {
     "@js-preview/excel": "^1.7.14",
     "commander": "^12.0.0",
@@ -50,6 +61,8 @@
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
+    "electron": "^40.6.1",
+    "electron-builder": "^26.8.1",
     "eslint": "^8.50.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
@@ -61,5 +74,47 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "build": {
+    "appId": "com.excel-diff.app",
+    "productName": "Excel 文件对比工具",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "public/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "public",
+        "to": "public"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "public/icon-256.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Excel 文件对比工具"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-Portable.exe"
+    }
   }
 }

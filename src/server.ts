@@ -7,6 +7,9 @@ import { ExcelComparator } from './ExcelComparator'
 import { ChangeRecordGenerator } from './ChangeRecordGenerator'
 import { ExcelExporter } from './ExcelExporter'
 import { messages } from './config'
+import { readFile } from 'fs/promises'
+import { existsSync } from 'fs'
+
 
 /**
  * Decode multer's latin1 encoded filename to proper UTF-8
@@ -299,6 +302,40 @@ app.get('/api/preview/:id', (req, res) => {
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' })
+})
+
+// Electron 专用：读取本地文件
+app.get('/api/read-file', async (req, res) => {
+  try {
+    const filePath = req.query.path as string
+    if (!filePath) {
+      res.status(400).json({ error: 'File path is required' })
+      return
+    }
+
+    // 安全检查：确保文件存在且是 Excel 文件
+    if (!existsSync(filePath)) {
+      res.status(404).json({ error: 'File not found' })
+      return
+    }
+
+    const ext = filePath.toLowerCase().split('.').pop()
+    if (!['xlsx', 'xls'].includes(ext || '')) {
+      res.status(400).json({ error: 'Invalid file type. Only Excel files are allowed.' })
+      return
+    }
+
+    const buffer = await readFile(filePath)
+    const mimeType = ext === 'xls' 
+      ? 'application/vnd.ms-excel'
+      : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    
+    res.setHeader('Content-Type', mimeType)
+    res.send(buffer)
+  } catch (error) {
+    console.error('Read file error:', error)
+    res.status(500).json({ error: 'Failed to read file' })
+  }
 })
 
 app.listen(PORT, () => {

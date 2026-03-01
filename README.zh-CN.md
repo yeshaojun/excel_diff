@@ -15,6 +15,7 @@
 - 📝 **多种输出格式**：文本、JSON、Markdown、CSV
 - 🚀 **CLI 接口**：便捷的命令行使用
 - 🌐 **Web 界面**：现代化、用户友好的 Web UI
+- 🖥️ **桌面应用**：跨平台 Electron 桌面应用程序
 
 ## 安装
 
@@ -52,6 +53,39 @@ npm run web
 ### 对比结果展示
 
 ![对比结果展示](./result2.png)
+
+### Electron 桌面应用
+
+启动 Electron 桌面应用：
+
+```bash
+# 开发模式
+npm run electron:dev
+
+# 或者构建后运行
+npm run build:all
+npm run electron:start
+```
+
+功能特性：
+- 原生桌面体验
+- 文件菜单快速选择文件
+- 键盘快捷键 (Ctrl+O, Ctrl+Shift+O)
+- 内置 Excel 预览
+- 与 Web 界面相同的功能
+
+### 构建桌面应用
+
+```bash
+# 构建当前平台
+npm run dist
+
+# 构建 Windows 版本
+npm run dist:win
+
+# 构建便携版
+npm run dist:portable
+```
 
 ### 命令行
 
